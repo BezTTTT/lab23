@@ -15,7 +15,18 @@ class Equipment{
 		Equipment(int,int,int);
 		vector<int> getStat();			
 };
-
+Equipment::Equipment(int h,int a,int d){
+	hpmax = h;
+	atk = a;
+	def = d;
+}
+vector<int>Equipment::getStat(){
+	vector<int> x ;
+	x.push_back(hpmax);
+	x.push_back(atk);
+	x.push_back(def);
+	return x;
+}
 class Unit{
 		string name;
 		string type;		
@@ -25,8 +36,9 @@ class Unit{
 		int def;
 		bool guard_on;
 		bool dodge_on; 
-		Equipment *equipment; 
-	public:			
+		Equipment *equipment;
+		vector<int> stat0;
+	public:		
 		Unit(string,string); 
 		void showStatus();
 		void newTurn();
@@ -39,7 +51,6 @@ class Unit{
 		bool isDead();
 		void equip(Equipment *);  
 };
-
 Unit::Unit(string t,string n){ 
 	type = t;
 	name = n;
@@ -52,8 +63,12 @@ Unit::Unit(string t,string n){
 		atk = rand()%5+25;
 		def = rand()%3+5;
 	}
+	stat0.push_back(hpmax);
+	stat0.push_back(atk);
+	stat0.push_back(def);
 	hp = hpmax;	
 	guard_on = false;
+	dodge_on = false;
 	equipment = NULL;
 }
 
@@ -73,7 +88,8 @@ void Unit::showStatus(){
 }
 
 void Unit::newTurn(){
-	guard_on = false; 
+	guard_on = false;
+	dodge_on = false;
 }
 
 int Unit::beAttacked(int oppatk){
@@ -81,15 +97,23 @@ int Unit::beAttacked(int oppatk){
 	if(oppatk > def){
 		dmg = oppatk-def;	
 		if(guard_on) dmg = dmg/3;
-	}	
-	hp -= dmg;
+		if(dodge_on==true){
+			int chance = rand()%2;
+			if(chance == 0) dmg = 0;
+			else dmg = dmg*2;
+		}
+	}
 	if(hp <= 0){hp = 0;}
-	
-	return dmg;	
+	hp-=dmg;
+	return dmg;
 }
 
 int Unit::attack(Unit &opp){
 	return opp.beAttacked(atk);
+}
+
+int Unit::ultimateAttack(Unit &opp){
+	return opp.beAttacked(2*atk);
 }
 
 int Unit::heal(){
@@ -101,6 +125,9 @@ int Unit::heal(){
 
 void Unit::guard(){
 	guard_on = true;
+}
+void Unit::dodge(){
+	dodge_on = true;
 }	
 
 bool Unit::isDead(){
@@ -108,6 +135,14 @@ bool Unit::isDead(){
 	else return false;
 }
 
+void Unit::equip(Equipment *equipment){
+	vector<int> st = equipment->getStat();
+	hpmax = stat0[0]+st[0];
+	atk = stat0[1]+st[1];
+	def = stat0[2]+st[2];
+	if(hpmax<hp) hp = hpmax;
+
+}
 void drawScene(char p_action,int p,char m_action,int m){
 	cout << "                                                       \n";
 	if(p_action == 'A'){
